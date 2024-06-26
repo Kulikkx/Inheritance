@@ -56,16 +56,12 @@ public:
 	{
 		cout << last_name << " " << first_name << " " << age << " y/o" << endl;
 	}
-	virtual std::ostream& info(std::ostream& os)const
-	{
-		return os << last_name << " " << first_name << " " << age << " y/o";
-	}
-
 };
 
-std::ostream& operator<<(std::ostream& os, const Human& obj)
+//dynamic_cast<>()
+virtual std::ostream& operator<<(std::ostream& os, const Human& obj)
 {
-	return obj.info(os);
+	return os << obj.get_last_name() << " " << obj.get_first_name() << " " << obj.get_age() << " y/o";
 }
 
 #define STUDENT_TAKE_PARAMETERS const std::string& speciality, const std::string& group, double rating, double attendance
@@ -130,13 +126,12 @@ public:
 		Human::info();
 		cout << speciality << " " << group << " " << rating << " " << attendance << endl;
 	}
-	std::ostream& info(std::ostream& os)const override //переопределить
-	{
-		return Human::info(os) << " "
-			<< speciality << " " << group << " " << rating << " " << attendance;
-	}
-
 };
+
+std::ostream& operator<<(std::ostream& os, const Student& obj)
+{
+	return os << (Human&)obj << " " << obj.get_speciality() << " " << obj.get_group() << " " << obj.get_rating() << " " << obj.get_attendance();
+}
 
 class Teacher : public Human
 {
@@ -179,12 +174,12 @@ public:
 		Human::info();
 		cout << speciality << " " << experience << " years" << endl;
 	}
-	std::ostream& info(std::ostream& os)const
-	{
-		return Human::info(os) << " " << speciality << " " << experience << " years" << endl;
-	}
-
 };
+
+std::ostream& operator<<(std::ostream& os, const Teacher& obj)
+{
+	return os << (Human&)obj << " " << obj.get_speciality() << " " << obj.get_experience() << " y/o";
+}
 
 class Graduate :public Student
 {
@@ -217,12 +212,12 @@ public:
 		Student::info();
 		cout << subject << endl;
 	}
-	std::ostream& info(std::ostream& os)const override
-	{
-		return Student::info(os) << " " << subject << endl;
-	}
-
 };
+
+std::ostream& operator<<(std::ostream& os, const Graduate& obj)
+{
+	return os << (Student&)obj << " " << obj.get_subject();
+}
 
 //#define INHERITANCE_CHECK
 
@@ -252,7 +247,7 @@ void main()
 		VFPTR - Virtual Functions Pointers (Таблица указателей на виртуальные функции)
 	*/
 
-	//	Generalization:
+	//	Generalization (UpCast):
 	Human* group[] =
 	{
 		new Student("Pinkman", "Jessie", 22, "Chemistry", "WW_220", 70, 97),
@@ -264,8 +259,14 @@ void main()
 	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
 	{
 		//group[i]->info();
-		cout << *group[i] << endl;
+		cout << typeid(*group[i]).name() << ":\t";
+		//https://legacy.cplusplus.com/doc/tutorial/typecasting/
+		//Specialization (DownCast):
+		if (typeid(*group[i]) == typeid(Student))cout << *dynamic_cast<Student*>(group[i]) << endl;
+		if (typeid(*group[i]) == typeid(Teacher))cout << *dynamic_cast<Teacher*>(group[i]) << endl;
+		if (typeid(*group[i]) == typeid(Graduate))cout << *dynamic_cast<Graduate*>(group[i]) << endl;
 		cout << delimiter << endl;
+		//member-function
 	}
 
 	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
